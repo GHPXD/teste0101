@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Ambiental Volvo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .brand-blue { color: #0066CC; }
+        .brand-blue-bg { background-color: #0066CC; }
+        .brand-blue-bg:hover { background-color: #0052a3; }
+        .volvo-gradient {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+        }
+        .card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease-in-out;
+        }
+        .btn {
+            transition: all 0.2s ease-in-out;
+            transform: translateY(0);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .answer-option {
+            border: 2px solid #e5e7eb;
+        }
+        .answer-option.selected {
+            border-color: #0066CC;
+            background-color: #e0f2fe;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="volvo-gradient min-h-screen flex items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-md mx-auto">
+
+        <!-- Seção de Login -->
+        <div id="login-section" class="card p-8 text-center fade-in">
+            <img src="https://placehold.co/150x40/0066CC/FFFFFF?text=VOLVO" alt="Logo da Volvo" class="mx-auto mb-6 h-10">
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Quiz Ambiental</h1>
+            <p class="text-gray-600 mb-6">Insira seu e-mail corporativo para participar.</p>
+            <div id="error-message" class="text-red-500 mb-4 text-sm font-medium hidden"></div>
+            <input type="email" id="email-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="seu.nome@volvo.com">
+            <!-- Botão modificado para estado inicial de carregamento -->
+            <button id="start-quiz-btn" class="w-full brand-blue-bg text-white font-bold py-3 px-4 rounded-lg btn opacity-50 cursor-not-allowed" disabled>
+                <span id="start-btn-text" class="hidden">Começar o Quiz</span>
+                <span id="start-btn-loader">
+                    <svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+            </button>
+        </div>
+
+        <!-- Seção do Quiz -->
+        <div id="quiz-section" class="card p-6 md:p-8 hidden fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold brand-blue">Questão <span id="question-number"></span>/5</h2>
+                <div class="text-lg font-semibold text-gray-700" id="timer">00:00.0</div>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="brand-blue-bg h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+            <p id="question-text" class="text-lg text-gray-800 font-medium mb-6"></p>
+            <div id="answer-options" class="space-y-3">
+                <!-- Opções de resposta serão inseridas aqui -->
+            </div>
+             <button id="next-question-btn" class="w-full mt-8 brand-blue-bg text-white font-bold py-3 px-4 rounded-lg btn opacity-50" disabled>Próxima</button>
+        </div>
+
+        <!-- Seção de Resultados -->
+        <div id="results-section" class="card p-8 text-center hidden fade-in">
+            <h2 class="text-3xl font-black text-gray-800 mb-2">Quiz Finalizado!</h2>
+            <p class="text-gray-600 mb-6">Obrigado por sua participação. Confira seu resultado:</p>
+            
+            <div class="bg-gray-100 rounded-xl p-6 my-6">
+                <div class="flex justify-around text-center">
+                    <div>
+                        <p class="text-sm text-gray-500">Pontuação</p>
+                        <p id="final-score" class="text-3xl font-bold brand-blue"></p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Seu Tempo</p>
+                        <p id="final-time" class="text-3xl font-bold brand-blue"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="ranking-info" class="text-center">
+                 <div id="ranking-loader" class="my-4">
+                    <svg class="animate-spin h-8 w-8 mx-auto text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-gray-500 mt-2">Calculando seu ranking...</p>
+                </div>
+                <div id="ranking-display" class="hidden">
+                    <p class="text-lg text-gray-700">Sua classificação atual é:</p>
+                    <p id="user-rank" class="text-5xl font-black brand-blue my-2"></p>
+                    <p class="text-gray-500 text-sm">entre <span id="total-participants"></span> participantes.</p>
+                </div>
+            </div>
+
+            <button id="show-ranking-btn" class="w-full mt-8 border-2 border-blue-600 text-blue-600 font-bold py-3 px-4 rounded-lg btn">Ver Ranking Completo</button>
+        </div>
+        
+        <!-- Seção do Ranking -->
+        <div id="ranking-section" class="hidden fade-in">
+             <div class="card p-6 md:p-8">
+                <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Top 50 Melhores</h2>
+                <div id="ranking-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                    <!-- Lista do ranking será inserida aqui -->
+                </div>
+                <button id="back-to-results-btn" class="w-full mt-8 border-2 border-gray-400 text-gray-600 font-bold py-3 px-4 rounded-lg btn">Voltar</button>
+             </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // Importações do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Configuração do Firebase (usando variáveis globais se disponíveis)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "YOUR_API_KEY", // Fallback
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'volvo-quiz-app';
+
+        // Inicialização do Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        const submissionsCollectionRef = collection(db, `artifacts/${appId}/public/data/quizSubmissions`);
+
+        // Definição das perguntas do Quiz
+        const quizQuestions = [
+            {
+                question: "Qual dos seguintes é um gás de efeito estufa liberado pela queima de combustíveis fósseis?",
+                options: ["Oxigênio", "Nitrogênio", "Dióxido de Carbono", "Hélio"],
+                answer: "Dióxido de Carbono"
+            },
+            {
+                question: "O que significa a sigla 'ESG' no mundo corporativo?",
+                options: ["Environmental, Social, and Governance", "Energy, Safety, and Growth", "Economic, Social, and Global", "Environment, Security, and Guidance"],
+                answer: "Environmental, Social, and Governance"
+            },
+            {
+                question: "Qual é a principal causa do desmatamento na Amazônia?",
+                options: ["Incêndios naturais", "Expansão agrícola e pecuária", "Mineração", "Construção de cidades"],
+                answer: "Expansão agrícola e pecuária"
+            },
+            {
+                question: "Qual destes materiais leva mais tempo para se decompor na natureza?",
+                options: ["Papel", "Casca de banana", "Garrafa de vidro", "Ponta de cigarro"],
+                answer: "Garrafa de vidro"
+            },
+            {
+                question: "A eletrificação da frota de veículos ajuda a reduzir qual tipo de poluição diretamente?",
+                options: ["Poluição sonora", "Poluição do ar local", "Poluição visual", "Poluição da água"],
+                answer: "Poluição do ar local"
+            }
+        ];
+
+        // Variáveis de estado do Quiz
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let score = 0;
+        let timerInterval;
+        let startTime;
+        let userEmail = '';
+        let selectedOption = null;
+
+        // Elementos da UI
+        const loginSection = document.getElementById('login-section');
+        const quizSection = document.getElementById('quiz-section');
+        const resultsSection = document.getElementById('results-section');
+        const rankingSection = document.getElementById('ranking-section');
+        
+        const emailInput = document.getElementById('email-input');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const startBtnText = document.getElementById('start-btn-text');
+        const startBtnLoader = document.getElementById('start-btn-loader');
+        const errorMessage = document.getElementById('error-message');
+
+        const questionNumber = document.getElementById('question-number');
+        const progressBar = document.getElementById('progress-bar');
+        const questionText = document.getElementById('question-text');
+        const answerOptionsContainer = document.getElementById('answer-options');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const timerDisplay = document.getElementById('timer');
+
+        const finalScore = document.getElementById('final-score');
+        const finalTime = document.getElementById('final-time');
+        const userRank = document.getElementById('user-rank');
+        const totalParticipants = document.getElementById('total-participants');
+        const rankingLoader = document.getElementById('ranking-loader');
+        const rankingDisplay = document.getElementById('ranking-display');
+        
+        const showRankingBtn = document.getElementById('show-ranking-btn');
+        const rankingList = document.getElementById('ranking-list');
+        const backToResultsBtn = document.getElementById('back-to-results-btn');
+
+        // --- LÓGICA DE AUTENTICAÇÃO (CORRIGIDA) ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuário está autenticado, agora podemos habilitar a interface.
+                console.log("Autenticação bem-sucedida. UID:", user.uid);
+                startBtnText.classList.remove('hidden');
+                startBtnLoader.classList.add('hidden');
+                startQuizBtn.disabled = false;
+                startQuizBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+
+        // Tenta autenticar assim que o script carrega.
+        (async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Falha crítica na autenticação:", error);
+                displayError("Erro de conexão. Não é possível iniciar o quiz.");
+                startBtnText.textContent = "Erro de Conexão";
+                startBtnText.classList.remove('hidden');
+                startBtnLoader.classList.add('hidden');
+            }
+        })();
+
+        // Funções de controle da UI
+        function showSection(section) {
+            loginSection.classList.add('hidden');
+            quizSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            rankingSection.classList.add('hidden');
+            section.classList.remove('hidden');
+        }
+        
+        function displayError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        function toggleButtonLoader(button, showLoader) {
+            const btnText = button.querySelector('span:not(.hidden)');
+            const btnLoader = button.querySelector('span.hidden');
+            if (showLoader) {
+                if(btnText) btnText.classList.add('hidden');
+                if(btnLoader) btnLoader.classList.remove('hidden');
+                button.disabled = true;
+            } else {
+                if(btnText) btnText.classList.remove('hidden');
+                if(btnLoader) btnLoader.classList.add('hidden');
+                button.disabled = false;
+            }
+        }
+
+        // Lógica do Quiz
+        startQuizBtn.addEventListener('click', async () => {
+            userEmail = emailInput.value.trim().toLowerCase();
+            errorMessage.classList.add('hidden');
+
+            // 1. Validação do e-mail
+            if (!userEmail) {
+                displayError("Por favor, insira seu e-mail.");
+                return;
+            }
+            if (!userEmail.endsWith('@volvo.com')) {
+                displayError("Apenas e-mails com domínio @volvo.com são permitidos.");
+                return;
+            }
+
+            toggleButtonLoader(startQuizBtn, true);
+
+            try {
+                // 2. Verificar se o e-mail já participou (AGORA COM PERMISSÃO GARANTIDA)
+                const q = query(submissionsCollectionRef, where("email", "==", userEmail));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    displayError("Este e-mail já participou do quiz.");
+                    toggleButtonLoader(startQuizBtn, false);
+                    return;
+                }
+                
+                // 3. Iniciar o quiz
+                startQuiz();
+
+            } catch (error) {
+                console.error("Erro ao verificar e-mail no Firestore: ", error);
+                displayError("Erro ao iniciar. Verifique sua conexão e tente novamente.");
+                toggleButtonLoader(startQuizBtn, false);
+            }
+        });
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            score = 0;
+            showSection(quizSection);
+            loadQuestion();
+            startTimer();
+        }
+
+        function loadQuestion() {
+            selectedOption = null;
+            const currentQuestion = quizQuestions[currentQuestionIndex];
+            
+            questionNumber.textContent = currentQuestionIndex + 1;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / quizQuestions.length) * 100}%`;
+            questionText.textContent = currentQuestion.question;
+            answerOptionsContainer.innerHTML = '';
+            
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'w-full text-left p-4 rounded-lg answer-option hover:bg-gray-100';
+                button.textContent = option;
+                button.addEventListener('click', () => selectAnswer(button, option));
+                answerOptionsContainer.appendChild(button);
+            });
+            
+            nextQuestionBtn.disabled = true;
+            nextQuestionBtn.classList.add('opacity-50');
+            if (currentQuestionIndex === quizQuestions.length - 1) {
+                nextQuestionBtn.textContent = 'Finalizar Quiz';
+            } else {
+                nextQuestionBtn.textContent = 'Próxima';
+            }
+        }
+
+        function selectAnswer(button, option) {
+            const previouslySelected = answerOptionsContainer.querySelector('.selected');
+            if (previouslySelected) {
+                previouslySelected.classList.remove('selected');
+            }
+            
+            button.classList.add('selected');
+            selectedOption = option;
+
+            nextQuestionBtn.disabled = false;
+            nextQuestionBtn.classList.remove('opacity-50');
+        }
+
+        nextQuestionBtn.addEventListener('click', () => {
+            if (selectedOption) {
+                userAnswers.push(selectedOption);
+                
+                if (selectedOption === quizQuestions[currentQuestionIndex].answer) {
+                    score++;
+                }
+                
+                currentQuestionIndex++;
+                
+                if (currentQuestionIndex < quizQuestions.length) {
+                    loadQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }
+        });
+
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsedTime = Date.now() - startTime;
+                timerDisplay.textContent = formatTime(elapsedTime, false);
+            }, 100);
+        }
+
+        function finishQuiz() {
+            clearInterval(timerInterval);
+            const totalTime = Date.now() - startTime;
+            
+            showSection(resultsSection);
+            finalScore.textContent = `${score}/${quizQuestions.length}`;
+            finalTime.textContent = formatTime(totalTime, true);
+
+            saveResults(totalTime);
+        }
+
+        async function saveResults(time) {
+            const submission = {
+                email: userEmail,
+                score: score,
+                time: time,
+                submittedAt: new Date()
+            };
+
+            try {
+                await addDoc(submissionsCollectionRef, submission);
+                console.log("Resultado salvo com sucesso!");
+                calculateRank();
+            } catch (error) {
+                console.error("Erro ao salvar resultado: ", error);
+                rankingLoader.innerHTML = '<p class="text-red-500">Erro ao calcular ranking.</p>';
+            }
+        }
+
+        async function calculateRank() {
+            rankingLoader.classList.remove('hidden');
+            rankingDisplay.classList.add('hidden');
+
+            try {
+                const querySnapshot = await getDocs(submissionsCollectionRef);
+                const allSubmissions = [];
+                querySnapshot.forEach(doc => {
+                    allSubmissions.push({ id: doc.id, ...doc.data() });
+                });
+
+                allSubmissions.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    return a.time - b.time;
+                });
+                
+                const currentUserRank = allSubmissions.findIndex(sub => sub.email === userEmail) + 1;
+                
+                userRank.textContent = `#${currentUserRank}`;
+                totalParticipants.textContent = allSubmissions.length;
+                
+                populateRankingList(allSubmissions);
+
+                rankingLoader.classList.add('hidden');
+                rankingDisplay.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Erro ao calcular o ranking:", error);
+                rankingLoader.innerHTML = '<p class="text-red-500">Não foi possível carregar o ranking.</p>';
+            }
+        }
+        
+        function populateRankingList(submissions) {
+            rankingList.innerHTML = '';
+            const top50 = submissions.slice(0, 50);
+            
+            top50.forEach((sub, index) => {
+                const li = document.createElement('div');
+                li.className = `flex items-center justify-between p-3 rounded-lg ${sub.email === userEmail ? 'bg-blue-100' : 'bg-gray-50'}`;
+                
+                const rank = index + 1;
+                const userIdentifier = sub.email.split('@')[0];
+
+                li.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="font-bold text-gray-700 w-8">${rank}.</span>
+                        <span class="font-medium text-gray-800">${userIdentifier}</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="font-semibold text-blue-600">${sub.score} pts</span>
+                        <span class="text-sm text-gray-500 w-24 text-right">${formatTime(sub.time, true)}</span>
+                    </div>
+                `;
+                rankingList.appendChild(li);
+            });
+        }
+
+
+        function formatTime(ms, includeMs) {
+            let seconds = Math.floor(ms / 1000);
+            let minutes = Math.floor(seconds / 60);
+            let remainingSeconds = seconds % 60;
+            let milliseconds = Math.floor((ms % 1000) / (includeMs ? 1 : 100));
+
+            const paddedMinutes = String(minutes).padStart(2, '0');
+            const paddedSeconds = String(remainingSeconds).padStart(2, '0');
+            
+            if (includeMs) {
+                const paddedMs = String(milliseconds).padStart(3, '0');
+                return `${paddedMinutes}:${paddedSeconds}.${paddedMs}`;
+            } else {
+                 return `${paddedMinutes}:${paddedSeconds}.${milliseconds}`;
+            }
+        }
+        
+        // Navegação entre seções de resultado e ranking
+        showRankingBtn.addEventListener('click', () => showSection(rankingSection));
+        backToResultsBtn.addEventListener('click', () => showSection(resultsSection));
+
+    </script>
+</body>
+</html>
